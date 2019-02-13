@@ -1,4 +1,6 @@
 require './twitter_init.rb'
+require 'bitly'
+require 'klout'
 
 class MicroBlogger
     attr_reader :client
@@ -7,6 +9,7 @@ class MicroBlogger
         puts "Initializing..."
         @client = AnujaTwitter.new.client
         puts @client.inspect
+        #Klout.api_key = 'xu9ztgnacmjx3bu82warbr3h'
     end
     def tweet(message)
         @client.update(message)
@@ -53,7 +56,9 @@ class MicroBlogger
             when "t" then tweet(parts[1..-1].join(" "))
             when "dm" then dm(parts[1], parts[2..-1].join(" "))
             when "flt" then friends_last_tweet
-
+            when "s" then shorten
+            #when "turl" then puts "I wrote this twitter client at: #{shorten(tweet(parts[1..-2].join(" ") + " " + shorten(parts[-1])))}"
+            when "k" then klout_score
             else
               puts "Sorry, I don't know the command #{command}"
             end           
@@ -72,9 +77,23 @@ class MicroBlogger
         friends.each do |friend|
             friend.status
             fs = friend.status
-            puts fs.inspect
-            
+            puts fs.inspect          
         end
+    end
+    def shorten
+        Bitly.use_api_version_3
+        bitly = Bitly.new('hungryacademy', 'R_430e9f62250186d2612cca76eee2dbc6')
+        puts bitly.shorten('http://jumpstartlab.com/courses/').inspect
+        #puts "Shortening this URL: #{original_url}"
+    end
+    def klout_score     
+        friends = @client.friends.collect { |friend| @client.user(friend).screen_name}
+        puts friends
+        #Klout.api_key = 'xu9ztgnacmjx3bu82warbr3h'
+        #identity = Klout::Identity.find_by_screen_name('gem')
+        #user = Klout::User.new(identity.id)
+        #user.score.score
+        
     end
 end
 blogger = MicroBlogger.new
@@ -85,7 +104,6 @@ blogger.followers("AnujaSh44221827") #fetch cursored list of followers
 blogger.friends("AnujaSh44221827") #fetch cursored list of friends with profile details
 blogger.user_timeline("iamsrk") #fetch the timeline of tweets by a user
 puts blogger.search #search justin beiber's 3 latest marriage proposals
-#puts blogger.search
 puts blogger.run
 blogger.dm
 puts blogger.friends_last_tweet
